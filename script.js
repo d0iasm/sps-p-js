@@ -7,7 +7,7 @@ ctx.translate(500, 500);
 // Log log graph
 const graph = document.getElementById("graph");
 const gctx = graph.getContext('2d');
-gctx.scale(150, 150);
+gctx.scale(200, 200);
 
 // HTML elements
 const startButton = document.getElementById('start');
@@ -103,12 +103,12 @@ function computeXV(delta) {
 
   // Compute V.
   let newCenter = computeCenter();
-  let cdx = newCenter.x - center.x;
-  let cdy = newCenter.y - center.y;
+  let cx = newCenter.x - center.x;
+  let cy = newCenter.y - center.y;
   sum = 0;
   for (let d of delta) {
-    let dx = d.x - cdx;
-    let dy = d.y - cdy;
+    let dx = d.x - cx;
+    let dy = d.y - cy;
     sum += Math.sqrt(dx * dx + dy * dy);
   }
   let v = sum / points.length;
@@ -131,7 +131,7 @@ function step() {
 
       const dx = pj.x - pi.x;
       const dy = pj.y - pi.y;
-      const dist = distance(pi, pj);
+      const dist = Math.sqrt(dx * dx + dy * dy);
       const k = K[pi.color][pj.color];
       x += (k / dist - dist ** -2) * dx / dist;
       y += (k / dist - dist ** -2) * dy / dist;
@@ -227,7 +227,7 @@ function stop() {
 }
 
 function reset() {
-  gctx.clearRect(-50000, -50000, 100000, 100000);
+  resetGraph();
 
   const running = handle;
   if (running) stop();
@@ -236,35 +236,57 @@ function reset() {
   if (running) start();
 }
 
-function drawGraph() {
-  gctx.save();
-  gctx.translate(0.5, 0.5);
-  gctx.scale(.1, .1);
-  gctx.transform(1, 0, 0, -1, 0, 0);
+function resetGraph() {
+  gctx.clearRect(0, 0, 1, 1);
 
   gctx.save();
-  gctx.strokeStyle = '#000';
-  gctx.lineWidth = 0.01;
+  gctx.strokeStyle = '#ccc';
+  gctx.lineWidth = 0.005;
 
+  for (let x = 0.25; x < 1; x += 0.25) {
+    gctx.beginPath();
+    gctx.moveTo(x, 0);
+    gctx.lineTo(x, 1);
+    gctx.stroke();
+
+    gctx.beginPath();
+    gctx.moveTo(0, x);
+    gctx.lineTo(1, x);
+    gctx.stroke();
+  }
+
+  gctx.lineWidth = 0.02;
   gctx.beginPath();
-  gctx.moveTo(-1000, 0);
-  gctx.lineTo(2000, 0);
+  gctx.moveTo(0.25, 0);
+  gctx.lineTo(0.25, 1);
   gctx.stroke();
 
   gctx.beginPath();
-  gctx.moveTo(0, -1000);
-  gctx.lineTo(0, 2000);
+  gctx.moveTo(0, 0.75);
+  gctx.lineTo(1, 0.75);
   gctx.stroke();
   gctx.restore();
 
-  gctx.fillStyle = 'black';
-  
+  gctx.save();
+  gctx.scale(.005, .005);
+  gctx.fillText('log10(10^3*V+1)', 5, 10);
+  gctx.fillText('log10(10^3*X+1)', 120, 165);
+  gctx.restore();
+}
+
+function drawGraph() {
+  gctx.save();
+  gctx.translate(0.25, 0.75);
+  gctx.scale(0.25, -0.25);
+
+  gctx.fillStyle = 'red';
+
   for (let p of xv) {
     let v = Math.log10(1000 * p.v + 1);
     let x = Math.log10(1000 * p.x + 1);
 
     gctx.beginPath();
-    gctx.arc(x, v, 0.003, 0, 2 * Math.PI, true);
+    gctx.arc(x, v, 0.05, 0, 2 * Math.PI, true);
     gctx.fill();
   }
 
@@ -294,4 +316,5 @@ for (let elem of document.getElementsByTagName('input')) {
 }
 
 initPoints();
+resetGraph();
 start();
