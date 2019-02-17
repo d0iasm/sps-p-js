@@ -204,6 +204,8 @@ function redraw() {
     drawPoint(p);
   }
   ctx.restore();
+  
+  document.getElementById('timestep').innerText = timestep;
 }
 
 function mainloop() {
@@ -211,7 +213,6 @@ function mainloop() {
     step();
   }
   redraw();
-  document.getElementById('timestep').innerText = timestep;
 }
 
 function start() {
@@ -233,6 +234,7 @@ function reset() {
   if (running) stop();
   initPoints();
   timestep = 0;
+  redraw();
   if (running) start();
 }
 
@@ -286,7 +288,7 @@ function drawGraph() {
     let x = Math.log10(1000 * p.x + 1);
 
     gctx.beginPath();
-    gctx.arc(x, v, 0.05, 0, 2 * Math.PI, true);
+    gctx.arc(x, v, 0.01, 0, 2 * Math.PI, true);
     gctx.fill();
   }
 
