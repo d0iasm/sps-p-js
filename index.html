@@ -6,26 +6,31 @@
     <link rel="stylesheet" href="./style.css">
   </head>
 
-  <body style='margin: 10px'>
-    <canvas id="canvas" width=650 height=650 style='border: 1px solid black'></canvas>
-    <canvas id="graph" width=200 height=200 style='border: 1px solid black'></canvas>
-    <br>
-    timestep: <span id=timestep></span>
-    <br>
+  <body> 
+    <div class=container>
+      <canvas id=canvas width=650 height=650 style='border: 1px solid black'></canvas>
 
-    K00 <input id=k0 type=text size=5 value=0.8></input>
-    K01 <input id=k1 type=text size=5 value=0.2></input>
-    K10 <input id=k2 type=text size=5 value=0.8></input>
-    K11 <input id=k3 type=text size=5 value=0.2></input>
-    <br>
-    Ka&nbsp; <input id=ra type=text size=5 value=0.8></input>
-    Kb&nbsp; <input id=rb type=text size=5 value=0.2></input>
-    Kp&nbsp; <input id=rp type=text size=5 value=0.8></input>
-    Km&nbsp; <input id=rm type=text size=5 value=0.2></input>
-    <br>
-    <button id=start>Stop</button>
-    <button id=reset>Reset</button>
+      <div>
+        timestep: <span id=timestep></span>
+        <br>
 
+        K00 <input id=k0 type=text size=5 value=0.8></input>
+        K01 <input id=k1 type=text size=5 value=0.2></input>
+        K10 <input id=k2 type=text size=5 value=0.8></input>
+        K11 <input id=k3 type=text size=5 value=0.2></input>
+        <br>
+        Ka&nbsp; <input id=ra type=text size=5 value=0.8></input>
+        Kb&nbsp; <input id=rb type=text size=5 value=0.2></input>
+        Kp&nbsp; <input id=rp type=text size=5 value=0.8></input>
+        Km&nbsp; <input id=rm type=text size=5 value=0.2></input>
+        <br>
+        <button id=start>Stop</button>
+        <button id=reset>Reset</button>
+
+        <h2>X-V log log graph</h2>
+        <canvas id=graph width=200 height=200 style='border: 1px solid black'></canvas>
+      </div>
+    </div>
   </body>
   <script src="./script.js"></script>
 </html>
