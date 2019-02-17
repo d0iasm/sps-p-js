@@ -1,26 +1,54 @@
+// Main canvas
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext('2d');
 ctx.scale(0.65, 0.65);
 ctx.translate(500, 500);
 
+// Log log graph
+const graph = document.getElementById("graph");
+const gctx = graph.getContext('2d');
+gctx.scale(150, 150);
+
+// HTML elements
 const startButton = document.getElementById('start');
 const resetButton = document.getElementById('reset');
 
+// Constants
 const numPoints = 50;
 const RED = 0;
 const BLUE = 1;
 
+// Variables
 let K = [[0, 0], [0, 0]];
 let currentScale = 1;
 let timestep = 0;
 let points = [];
 let handle;
 
+// Graph
+let xv = [];
+let center;
+
 function initPoints() {
   for (let i = 0; i < numPoints; i++) {
     const color = (i < numPoints / 2) ? RED : BLUE;
     points[i] = {x: random(), y: random(), color: color};
   }
+  center = computeCenter();
+}
+
+function random() {
+  return (Math.random() - 0.5) * 10;
+}
+
+function computeCenter() {
+  let x = 0;
+  let y = 0;
+  for (let p of points) {
+    x += p.x;
+    y += p.y;
+  }
+  return {x: x / points.length, y: y / points.length};
 }
 
 function drawGrid() {
@@ -52,18 +80,6 @@ function drawPoint(p) {
   ctx.restore();
 }
 
-function random() {
-  return (Math.random() - 0.5) * 10;
-}
-
-function subtract(ri, rj) {
-  return {x: rj.x - ri.x, y: rj.y - ri.y};
-}
-
-function length(vector) {
-  return Math.sqrt(vector.x**2 + vector.y**2);
-}
-
 function rungeKutta(k1) {
   const k2 = k1 + k1 * 0.002 * 0.5;
   const k3 = k1 + k2 * 0.002 * 0.5;
@@ -71,9 +87,40 @@ function rungeKutta(k1) {
   return (k1 + 2 * k2 + 2 * k3 + k4) * (0.002 / 6.0);
 }
 
+function distance(p, q) {
+  const dx = p.x - q.x;
+  const dy = p.y - q.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function computeXV(delta) {
+  // Compute values for drawing the graph. First, compute X.
+  let sum = 0;
+  for (let p of points) {
+    sum += distance(center, p);
+  }
+  let x = points.length / sum;
+
+  // Compute V.
+  let newCenter = computeCenter();
+  let cdx = newCenter.x - center.x;
+  let cdy = newCenter.y - center.y;
+  sum = 0;
+  for (let d of delta) {
+    let dx = d.x - cdx;
+    let dy = d.y - cdy;
+    sum += Math.sqrt(dx * dx + dy * dy);
+  }
+  let v = sum / points.length;
+
+  center = newCenter;
+  xv.push({x: x, v: v});
+}
+
 function step() {
   timestep++;
   let ps = [];
+  let delta = [];
 
   for (let pi of points) {
     let x = 0;
@@ -82,15 +129,21 @@ function step() {
     for (let pj of points) {
       if (pi == pj) continue;
 
-      const diffV = subtract(pi, pj);
-      const dis = length(diffV);
+      const dx = pj.x - pi.x;
+      const dy = pj.y - pi.y;
+      const dist = distance(pi, pj);
       const k = K[pi.color][pj.color];
-      x += (k / dis - dis ** -2) * diffV.x / dis;
-      y += (k / dis - dis ** -2) * diffV.y / dis;
+      x += (k / dist - dist ** -2) * dx / dist;
+      y += (k / dist - dist ** -2) * dy / dist;
     }
-    ps.push({x: pi.x + rungeKutta(x), y: pi.y + rungeKutta(y), color: pi.color});
+    x = rungeKutta(x);
+    y = rungeKutta(y);
+    ps.push({x: pi.x + x, y: pi.y + y, color: pi.color});
+    delta.push({x: x, y: y});
   }
   points = ps;
+
+  computeXV(delta);
 }
 
 function redrawParams() {
@@ -143,6 +196,7 @@ function redraw() {
   ctx.save();
   ctx.clearRect(-50000, -50000, 100000, 100000);
 
+  drawGraph();
   scaleout();
   drawGrid();
 
@@ -173,11 +227,49 @@ function stop() {
 }
 
 function reset() {
+  gctx.clearRect(-50000, -50000, 100000, 100000);
+
   const running = handle;
   if (running) stop();
   initPoints();
   timestep = 0;
   if (running) start();
+}
+
+function drawGraph() {
+  gctx.save();
+  gctx.translate(0.5, 0.5);
+  gctx.scale(.1, .1);
+  gctx.transform(1, 0, 0, -1, 0, 0);
+
+  gctx.save();
+  gctx.strokeStyle = '#000';
+  gctx.lineWidth = 0.01;
+
+  gctx.beginPath();
+  gctx.moveTo(-1000, 0);
+  gctx.lineTo(2000, 0);
+  gctx.stroke();
+
+  gctx.beginPath();
+  gctx.moveTo(0, -1000);
+  gctx.lineTo(0, 2000);
+  gctx.stroke();
+  gctx.restore();
+
+  gctx.fillStyle = 'black';
+  
+  for (let p of xv) {
+    let v = Math.log10(1000 * p.v + 1);
+    let x = Math.log10(1000 * p.x + 1);
+
+    gctx.beginPath();
+    gctx.arc(x, v, 0.003, 0, 2 * Math.PI, true);
+    gctx.fill();
+  }
+
+  xv = [];
+  gctx.restore();
 }
 
 startButton.addEventListener('click', function() {
